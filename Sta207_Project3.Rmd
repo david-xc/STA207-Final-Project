@@ -47,7 +47,7 @@ library(dplyr)
 ## Preprocessing #### 
 #covid <- read_csv("https://covid19.who.int/WHO-cOVID-19-global-data.csv")
 #write_csv(covid,file="../WHO-Covid-19-backup.csv")
-covid<-read_csv("WHO-COVID-19-global-data.csv")
+covid<-read_csv("Data/WHO-COVID-19-global-data.csv")
                
 
 covid <- covid %>% 
@@ -214,51 +214,51 @@ covid %>%
 ```
 
 ```{r,echo=F,results=T,message=F}
-popDen <- read.csv("populationDensitycsvData.csv",
+popDen <- read.csv("Data/populationDensitycsvData.csv",
                header = FALSE)
 aa<-merge(x=covid.today, y=popDen, by.x='Country', by.y='V1')
 names(aa)[names(aa) == "V2"] <- "popdensity"
 
-lockdown <- read.csv("lockdown.csv",
+lockdown <- read.csv("Data/lockdown.csv",
                header = FALSE)
 aa<-merge(x=aa, y=lockdown, by.x='Country', by.y='V1')
 names(aa)[names(aa) == "V2"] <- "lockdown"
 
-tracing <- read.csv("tracing.csv",
+tracing <- read.csv("Data/tracing.csv",
                header = FALSE)
 aa<-merge(x=aa, y=tracing, by.x='Country', by.y='V1')
 names(aa)[names(aa) == "V2"] <- "tracing"
 
-stringency <- read.csv("stringency-index.csv",
+stringency <- read.csv("Data/stringency-index.csv",
                header = FALSE)
 aa<-merge(x=aa, y=stringency, by.x='Country', by.y='V1')
 names(aa)[names(aa) == "V2"] <- "StringencyIndex"
 
-beds <- read.csv("beds.csv",
+beds <- read.csv("Data/beds.csv",
                header = FALSE)
 aa<-merge(x=aa, y=beds, by.x='Country', by.y='V1')
 names(aa)[names(aa) == "V2"] <- "Beds_per_10000_population"
 
-Age <- read.csv("Age.csv",
+Age <- read.csv("Data/Age.csv",
                header = FALSE)
 aa<-merge(x=aa, y=Age, by.x='Country', by.y='V1')
 names(aa)[names(aa) == "V2"] <- "Age_65up"
 names(aa)[names(aa) == "V3"] <- "Age_15_64"
 names(aa)[names(aa) == "V4"] <- "Age_0_14"
 
-temp <- read.csv("temp.csv",
+temp <- read.csv("Data/temp.csv",
                header = FALSE)
 aa<-merge(x=aa, y=temp, by.x='Country', by.y='V1')
 names(aa)[names(aa) == "V2"] <- "temperature"
 
-GDS <- read.csv("GDS.csv",
+GDS <- read.csv("Data/GDS.csv",
                header = FALSE)
 aa<-merge(x=aa, y=GDS, by.x='Country', by.y='V1')
 
 bb_total<-aa[complete.cases(aa), ]
 names(bb_total)[names(bb_total) == "V2"] <- "GDS"
 
-write.csv(bb_total,"Totaldata.csv", row.names = FALSE)
+write.csv(bb_total,"Data/Totaldata.csv", row.names = FALSE)
 
 ```
 
@@ -269,7 +269,7 @@ Firstly, we caculate the mean temperature of each country in the past 5 years. T
 
 ```{r,echo=F,results=T,message=F}
 world <- map_data("world");
-temp1 <- read.csv("temp1.csv",
+temp1 <- read.csv("Data/temp1.csv",
                header = FALSE)
 names(temp1)[names(temp1) == "V1"] <- "region"
 names(temp1)[names(temp1) == "V2"] <- "temperature"
@@ -304,7 +304,7 @@ world$region[world$region=="Swaziland"] <- "Eswatini"
 world$region[world$region=="Vietnam"] <- "Viet Nam"
 world$region[world$region=="Laos"] <- "Lao People's Democratic Republic"
 
-Age_65up <- read.csv("Age_65up.csv",
+Age_65up <- read.csv("Data/Age_65up.csv",
                header = FALSE)
 names(Age_65up)[names(Age_65up) == "V1"] <- "region"
 names(Age_65up)[names(Age_65up) == "V2"] <- "Population_Age_65up"
@@ -316,7 +316,7 @@ fig.map  <- ggplot() +
 fig.map
 
 
-Age_1564 <- read.csv("Age_15_64.csv",
+Age_1564 <- read.csv("Data/Age_15_64.csv",
                header = FALSE)
 names(Age_1564)[names(Age_1564) == "V1"] <- "region"
 names(Age_1564)[names(Age_1564) == "V2"] <- "Population_Age_15_64"
@@ -328,7 +328,7 @@ fig.map  <- ggplot() +
 fig.map
 
 
-Age_under14 <- read.csv("Age_under14.csv",
+Age_under14 <- read.csv("Data/Age_under14.csv",
                header = FALSE)
 names(Age_under14)[names(Age_under14) == "V1"] <- "region"
 names(Age_under14)[names(Age_under14) == "V2"] <- "Population_Age_under14"
@@ -349,7 +349,7 @@ Thirdly, we show the hospital beds per 10000 population has in each country. Thi
 
 ```{r,echo=F,results=T,message=F}
 world <- map_data("world");
-beds1 <- read.csv("beds1.csv",
+beds1 <- read.csv("Data/beds1.csv",
                header = FALSE)
 names(beds1)[names(beds1) == "V1"] <- "region"
 names(beds1)[names(beds1) == "V2"] <- "Beds_per_10000_population"
@@ -385,7 +385,7 @@ world$region[world$region=="Vietnam"] <- "Viet Nam"
 world$region[world$region=="Laos"] <- "Lao People's Democratic Republic"
 
 
-popden1 <- read.csv("populationDensitycsvData.csv",
+popden1 <- read.csv("Data/populationDensitycsvData.csv",
                header = FALSE)
 names(popden1)[names(popden1) == "V1"] <- "region"
 names(popden1)[names(popden1) == "V2"] <- "Population_density"
@@ -402,7 +402,7 @@ Finally, we acquire the Gross domestic savings (GDS) data of every country. We c
 
 ```{r,echo=F,results=T,message=F}
 
-GDS <- read.csv("GDS.csv",
+GDS <- read.csv("Data/GDS.csv",
                header = FALSE)
 names(GDS)[names(GDS) == "V1"] <- "region"
 names(GDS)[names(GDS) == "V2"] <- "GDS(in dollar)"
@@ -421,7 +421,7 @@ The index on any given day is calculated as the mean score of the nine metrics, 
 
 ```{r,echo=F,results=T,message=F}
 world <- map_data("world");
-stringency1 <- read.csv("stringency-index1.csv",
+stringency1 <- read.csv("Data/stringency-index1.csv",
                header = FALSE)
 names(stringency1)[names(stringency1) == "V1"] <- "region"
 names(stringency1)[names(stringency1) == "V2"] <- "StringencyIndex"
@@ -439,7 +439,7 @@ fig.map
 library(readr)
 library(dplyr)
 
-Summary_data <- read_csv("Summary data.csv")
+Summary_data <- read_csv("Data/Summary data.csv")
 Summary_data = na.omit(Summary_data)
 
 data.1 = Summary_data%>%select(Cumulative_cases,popdensity,lockdown,tracing,StringencyIndex,Beds_per_10000_population,Age_65up,Age_15_64,Age_0_14,temperature,GDS)
@@ -728,7 +728,13 @@ In the Scale-Location plot, the spread of the data points is lowest on the right
 plot(step.f1, which = 2)
 ```
 
-In the Normal Q-Q plot, the data points approximately fall on the line, with a few outliers as exceptions. That means the normality assumption holds.
+In the Normal Q-Q plot, the shape is very strange and many points deviates from the line a lot. We used Shapiro-Wilk Normality Test on the residual to check the normality.
+
+```{r,echo=F}
+shapiro.test(step.f1$residuals)
+```
+
+The p-value is less than 2.2e-16, which implies that the distribution of the residuals are significantly different from normal distribution.
 
 Second, we diagnostic the Cumulative Death model
 ```{r,echo=F}
@@ -747,7 +753,13 @@ This Scale-Location plot verifies the violation of homoscedasticity. The spread 
 plot(step.f2, which = 2)
 ```
 
-There are some outliers, but most of the data points are on the line, and the normality assumption likely holds.
+The shape of the Q-Q plot is very strange. The normality assumption might be violated. We used Shapiro-Wilk Normality Test to check the normality.
+
+```{r,echo=F}
+shapiro.test(step.f2$residuals)
+```
+
+The p-value is less than 2.2e-16, which implies that the distribution of the residuals are significantly different from normal distribution.
 
 Finally, we diagnostic the case-mortality rate model
 ```{r,echo=F}
@@ -766,7 +778,13 @@ This Scale-Location plot verifies that the homoscedasticity assumption holds. Th
 plot(step.f3, which = 2)
 ```
 
-In this Normal Q-Q plot, there are some point deviates from the dash line, but most of the points are on the lines. The normality assumption is probability hold.
+In this Normal Q-Q plot, there are some point deviates from the dash line, but most of the points are on the lines. We used Shapiro-Wilk Normality Test to check the normality.
+
+```{r,echo=F}
+shapiro.test(step.f3$residuals)
+```
+
+The p-value is less than 3.898e-08, which implies that the distribution of the residuals are significantly different from normal distribution.
 
 ### Conclusion
 This project focus on three questions: which variables affect cumulative cases, cumulative death, and the case-mortality rate. 
@@ -777,8 +795,11 @@ The cumulative deaths is highly associated with stringency index,  population of
 
 Case-mortality rate, is highly associated with population density, stringency index, tracing, and population of age 65+. Our result shows population density is negatively assocaited with case-mortality rate. This is because a high popudentsity means people can get together easily and the virus is easier to spread. The policy of tracing is negatively related with case-mortality rate. That might because this policy help hospitals and governments find out patients early, and provide treatment earlier. More importantly, according to our causal interpretation, conact tracing has causal effect on the case-mortality rate. Stringency index is positively related with case-mortality rate. The potential explanation is the societies lose function with higher level of restriction, and cause the case-mortality rate increases. Age 65+ has higher case-mortality rate, and that is our common sense; older people have weaker immune system, and a lot of deaths happen in nursing houses. 
 
+It important to notes that the normality assumption in our models do not hold. Fortunately, this violation does not affect our project too much, since the normality assumption is important when we need to get confidence intervals and p-value from our analysis.
+
 In addition, we need to note that in our analysis, some factors of some countries are missing. For example, the WorldBank doesn't provide the GDS for some sountries, like Andorra, Yemen and so on. But the main economies and most populated countries are all included in our analysis. So we believe these missing data would not affect the correctness of our analysis.
 
+In the future, we can further study the relationship of different factor is smaller scale level. For example we can focus on the data of different states in the US or even counties in California. In this way, it is possible to discover more detailed factors which have influence on the covid-19 situation.
 # References
 [1].https://www.cdc.gov/coronavirus/2019-ncov/cdcresponse/about-COVID-19.html
 
@@ -803,3 +824,8 @@ In addition, we need to note that in our analysis, some factors of some countrie
 [11].https://ourworldindata.org/grapher/covid-contact-tracing?stackMode=absolute&country=&region=World
 
 [12].https://ourworldindata.org/covid-government-stringency-index#government-stringency-index
+
+Github repository: https://github.com/david-xc/STA207-Final-Project/blob/main/Sta207_Project3.Rmd
+```{r}
+sessionInfo()
+```
