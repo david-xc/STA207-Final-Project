@@ -1,0 +1,805 @@
+---
+title: "Project3"
+author: "Team 10:Xiaochuan Ma | Ziqin Wang | Zheyuan Yu"
+date: "March 5, 2021"
+output: html_document
+---
+
+## Abstract
+
+The Covid-19 pandemic started in December 2019. Since then, the epidemic has spread to almost all countries and territories in the world. Now, there are 114,853,685 confirmed cases and 2,554,694 deaths, as stated by the World Health Organization. In response to this current public health emergency, this project conducted a statistical analysis using WHO Covid-19 data and other related data source. We apply linear regression as the main tool. As a result, we find the factors which have significant relationship with cumulative cases, cumulative deaths and case-mortality rate.
+
+## Introduction
+
+The Covid-19 pandemic has lasted more than one year. Although there are hopes of medical solutions and massive vacination is on the way, there is still long way to go to make people's life back into normal. As the most serious crisis human has met in this centry, there are 114,853,685 confirmed cases and 2,554,694 deaths. Given the tragedic situation, it's natural to ask that how to efficiently deal with this kind of crisis and protect people's health. In the past year, we have seen that different countries has different performance facing the pandemic. This may be caused economical, cultrual, political resaons. Therefore, in this project, we want to study the relations between the objectives conditions, government responses and the covid situation (confirmed cases, deaths, case-mortality rate) in country level.
+
+The data set we apply in this project are from the WHO, the WorldBank and ourworldindata websites. The WHO dataset provides the daily covid-19 situations of all countries in the world, including daily new cases, new deaths, culmulative cases and culmulative deaths. The data sets we extracted from WorldBank including the monthly temperature of the last five years, age struture, hospital beds per 10,000 poipulation, Gross domestic savings (GDS), population density of most countries in the world. Finally, we acquired the dataset of lockdown and contact tracing of different countries from ourworldindata website.
+
+With these data, we want to answer three questions:
+(1)which variables could affect cumulative cases;
+(2)which variables could affect cumulative death;
+(3)which variables could affect the case-mortality rate.
+
+## Background of COVID 19
+
+Coronavirus disease 2019 (COVID-19) is caused by a new coronavirus first identified in Wuhan, China, in December 2019. Most people who have COVID-19 have mild symptoms(fever, cough, fatigue, breathing difficulties, and loss of smell and taste), but this disease cause severe illness and even death. Moreover the symptoms are not going to begin immediately, it will begin one to fourteen days after exposure to the virus [1]. This make the virus harder to identify and contain.
+Older adults and people who have certain underlying medical conditions, are at increased risk of severe illness. 
+The virus that causes COVID-19 spreads mainly when an infected person is in close contact[a] with another person. Small droplets and aerosols containing the virus can spread from an infected person's nose and mouth as they breathe, cough, sneeze, sing, or speak. Other people are infected if the virus gets into their mouth, nose or eyes. The virus may also spread via contaminated surfaces, although this is not thought to be the main route of transmission. The exact route of transmission is rarely proven conclusively, but infection mainly happens when people are near each other for long enough [1].
+
+Coronaviruses are a large family of viruses that are common in people and many different species of animals, including camels, cattle, cats, and bats. There are many types of human coronaviruses, including some that commonly cause mild upper-respiratory tract illnesses. COVID-19 is a new disease, caused by a novel (or new) coronavirus that has not previously been seen in humans.
+Animal coronaviruses rarely infect people and then spread between people. This occurred with two earlier coronaviruses, MERS-CoV and SARS-CoV [2].
+
+Effective measures to prevent the spread include physical or social distancing, quarantining, ventilation of indoor spaces, covering coughs and sneezes, hand washing, and keeping unwashed hands away from the face. Wearing face masks or coverings has been proved very effective in public settings to minimise the risk of transmissions. Now, several vaccines have been develvped and several countries have initiated mass vaccination campaigns. To date, there are more than 80,000,000 doses of vaccine has been administered in the US [3].
+
+
+## Summary statistics of datasets
+### 1.WHO dataset
+The WHO dataset provides the daily covid-19 situations of all countries in the world, including daily new cases, new deaths, culmulative cases and culmulative deaths [4].
+
+First, let's look at the situation in the 10 countries which have most covid cases. These ten countries have 63.7% confirmed cases and 57.9% deaths of the world. From this figure, we can see the relationship between the cases and deaths (case-mortality rate) of the 10 countries is likely to be a linear relationship. The case-mortality rate of the 10 countries is 2.02%, which is very close to the global case-mortality rate 2.22%.
+```{r,echo=F,results=F,message=F}
+library(tidyverse)
+library(gridExtra)
+library(scales)
+library(lubridate)
+library(ggplot2)
+library(dplyr)
+## Preprocessing #### 
+#covid <- read_csv("https://covid19.who.int/WHO-cOVID-19-global-data.csv")
+#write_csv(covid,file="../WHO-Covid-19-backup.csv")
+covid<-read_csv("WHO-COVID-19-global-data.csv")
+               
+
+covid <- covid %>% 
+  filter(WHO_region != "Other") %>% 
+  mutate(WHO_region = fct_recode(WHO_region,"Eastern Mediterranean"="EMRO","Europe" = "EURO","Africa" = "AFRO","Western Pacific" = "WPRO","Americas"="AMRO","South-East Asia" = "SEARO"))
+
+range(covid$Date_reported)
+length(unique(covid$Country))
+
+
+top10_cases_covid_data<- covid %>% 
+  filter(Country == "United States of America"|Country == "Brazil"|Country == "India"|Country == "The United Kingdom"|Country == "Russian Federation"|Country == "France"|Country == "Spain"|Country == "Italy"|Country == "Turkey"|Country == "Germany")
+
+top10_deaths_covid_data<- covid %>% 
+  filter(Country == "United States of America"|Country == "Brazil"|Country == "India"|Country == "The United Kingdom"|Country == "Russian Federation"|Country == "France"|Country == "Spain"|Country == "Italy"|Country == "Mexico"|Country == "Germany")
+## Scatterplot ####
+
+
+fig.scatter.2 <- top10_cases_covid_data %>% 
+  filter(Date_reported=="2021-03-01") %>% 
+  ggplot(aes(x=Cumulative_cases,y=Cumulative_deaths)) +
+  geom_point()+
+  geom_text(aes(label=Country),hjust=0, vjust=0)
+
+fig.scatter.2
+
+
+
+```
+
+In the following three maps, we present the cumulative confirmed cases, cumulative deaths and case-mortality rate of all countries.
+
+```{r,echo=F,results=T,message=F}
+## Maps #### 
+library(maps)
+world <- map_data("world");
+
+world$region[world$region=="North Korea"] <- "Democratic People's Republic of Korea"
+world$region[world$region=="South Korea"] <- "Republic of Korea"
+world$region[world$region=="Iran"] <- "Iran (Islamic Republic of)"
+world$region[world$region=="USA"] <- "United States of America"
+world$region[world$region=="Republic of Congo"] <- "Congo"
+world$region[world$region=="Russia"] <- "Russian Federation"
+world$region[world$region=="Czech Republic"] <- "Czechia"
+world$region[world$region=="Bolivia"] <- "Bolivia (Plurinational State of)"
+world$region[world$region=="Venezuela"] <- "Venezuela (Bolivarian Republic of)"
+world$region[world$region=="UK"] <- "The United Kingdom"
+world$region[world$region=="Ivory Coast"] <- "Côte d’Ivoire"
+world$region[world$region=="Tanzania"] <- "United Republic of Tanzania"
+world$region[world$region=="Moldova"] <- "Republic of Moldova"
+world$region[world$region=="Swaziland"] <- "Eswatini"
+world$region[world$region=="Vietnam"] <- "Viet Nam"
+world$region[world$region=="Laos"] <- "Lao People's Democratic Republic"
+
+
+covid.today<- covid %>% 
+  filter(Date_reported == "2021-3-01") %>% 
+  mutate(region=Country)
+
+
+covid.today.world<- inner_join(world, covid.today, by = "region")
+
+fig.map  <- ggplot() +
+  geom_polygon(data = covid.today.world, aes(x=long, y = lat, group = group,fill=Cumulative_cases)) + 
+  coord_fixed(1.3)
+fig.map
+```
+
+
+```{r,echo=F,results=T,message=F}
+fig.map  <- ggplot() +
+ geom_polygon(data = covid.today.world, aes(x=long, y = lat, group = group,fill=Cumulative_deaths)) + 
+  coord_fixed(1.3)
+fig.map
+
+# Q: Why is USA not shown in the map?
+# Check out:  setdiff(unique(covid.today$Country),unique(world$region))!
+
+```
+```{r,echo=F,results=T,message=F}
+fig.map  <- ggplot() +
+  geom_polygon(data = covid.today.world, aes(x=long, y = lat, group = group,fill=Cumulative_deaths/Cumulative_cases)) + 
+  coord_fixed(1.3)
+fig.map
+
+# Q: Why is USA not shown in the map?
+# Check out:  setdiff(u?ique(covid.today$Country),unique(world$region))!
+
+```
+
+
+
+
+Next, we show the daily new cases and daily deaths of the 10 countries during the pandemic. From the following two tables, we can see that, some countries (e.g. India) only have one peak in the curve and other countries (e.g. USA and UK) have more than one peaks in the curve. This result indicates that in some countries the conditions about the spread or testing of covid 19 is not stable. For example, the daily testing ability, the restriction of residents could change during the pandemic several times.
+
+```{r,echo=F,results=T,message=F}
+## Maps #### 
+
+
+## Spaghetti plot
+
+fig.spaghetti.1 <- top10_cases_covid_data %>% 
+  filter(Date_reported>= "2020-01-30", Date_reported<= "2021-03-01") %>% 
+  mutate(Date=as.Date(Date_reported)) %>%
+  ggplot(aes(x=Date,y=New_cases,by=Country)) +
+  geom_line(aes(color=Country)) +
+  theme(legend.position ='left')
+fig.spaghetti.1   
+```
+
+
+```{r,echo=F,results=T,message=F}
+fig.spaghetti.2 <- top10_cases_covid_data %>% 
+  filter(Date_reported>= "2020-01-30", Date_reported<= "2021-03-01") %>% 
+  mutate(Date=as.Date(Date_reported)) %>%
+  ggplot(aes(x=Date,y=New_deaths,by=Country)) +
+  geom_line(aes(color=Country)) +
+  theme(legend.position ='left')
+fig.spaghetti.2  
+
+```
+
+
+
+Finally, we present the variation of new cases, new deaths, cumulative cases and cumulative deaths of the six main regions of the world. From the following two interactive plots, we can clearly see that the pandemic's global spread route. It started in western Pacific and then spreaded to Europe and finally went to Americas.
+
+```{r,echo=F,results=T,message=F}
+## Interactive plot ####
+library(plotly)
+covid %>% 
+  filter(Date_reported>= "2020-01-30", Date_reported<= "2021-03-01") %>% 
+  group_by(Date_reported,WHO_region) %>%   summarize(New_deaths = sum(New_deaths),
+            New_cases = sum(New_cases)) %>% 
+  mutate(Days_2021 = Date_reported- as.Date("2020-01-30")) %>%
+  plot_ly(
+    x= ~New_cases,
+    y= ~New_deaths,
+    frame = ~Days_2021,
+    text=~WHO_region,
+    hoverinfo="WHO_region",
+    color=~WHO_region,
+    type = 'scatter',
+    mode = 'markers',
+    showlegend = T
+  )
+```
+```{r,echo=F,results=T,message=F}
+covid %>% 
+  filter(Date_reported>= "2020-01-30", Date_reported<= "2021-03-01") %>% 
+  group_by(Date_reported,WHO_region) %>%   summarize(Cum_deaths = sum(Cumulative_deaths),
+            Cum_cases = sum(Cumulative_cases)) %>% 
+  mutate(Days_2021 = Date_reported- as.Date("2020-01-30")) %>%
+  plot_ly(
+    x= ~Cum_cases,
+    y= ~Cum_deaths,
+    frame = ~Days_2021,
+    text=~WHO_region,
+    hoverinfo="WHO_region",
+    color=~WHO_region,
+    type = 'scatter',
+    mode = 'markers',
+    showlegend = T
+ )
+```
+
+```{r,echo=F,results=T,message=F}
+popDen <- read.csv("populationDensitycsvData.csv",
+               header = FALSE)
+aa<-merge(x=covid.today, y=popDen, by.x='Country', by.y='V1')
+names(aa)[names(aa) == "V2"] <- "popdensity"
+
+lockdown <- read.csv("lockdown.csv",
+               header = FALSE)
+aa<-merge(x=aa, y=lockdown, by.x='Country', by.y='V1')
+names(aa)[names(aa) == "V2"] <- "lockdown"
+
+tracing <- read.csv("tracing.csv",
+               header = FALSE)
+aa<-merge(x=aa, y=tracing, by.x='Country', by.y='V1')
+names(aa)[names(aa) == "V2"] <- "tracing"
+
+stringency <- read.csv("stringency-index.csv",
+               header = FALSE)
+aa<-merge(x=aa, y=stringency, by.x='Country', by.y='V1')
+names(aa)[names(aa) == "V2"] <- "StringencyIndex"
+
+beds <- read.csv("beds.csv",
+               header = FALSE)
+aa<-merge(x=aa, y=beds, by.x='Country', by.y='V1')
+names(aa)[names(aa) == "V2"] <- "Beds_per_10000_population"
+
+Age <- read.csv("Age.csv",
+               header = FALSE)
+aa<-merge(x=aa, y=Age, by.x='Country', by.y='V1')
+names(aa)[names(aa) == "V2"] <- "Age_65up"
+names(aa)[names(aa) == "V3"] <- "Age_15_64"
+names(aa)[names(aa) == "V4"] <- "Age_0_14"
+
+temp <- read.csv("temp.csv",
+               header = FALSE)
+aa<-merge(x=aa, y=temp, by.x='Country', by.y='V1')
+names(aa)[names(aa) == "V2"] <- "temperature"
+
+GDS <- read.csv("GDS.csv",
+               header = FALSE)
+aa<-merge(x=aa, y=GDS, by.x='Country', by.y='V1')
+
+bb_total<-aa[complete.cases(aa), ]
+names(bb_total)[names(bb_total) == "V2"] <- "GDS"
+
+write.csv(bb_total,"Totaldata.csv", row.names = FALSE)
+
+```
+
+### 2.WorldBank datasets
+The data of interest we acquired from WorldBank website include monthly temperature of the last five years[5], age struture[6], hospital beds per 10,000 poipulation[7], Gross domestic savings (GDS)[8], population density of most countries in the world[9]. Next, we will introduce these factors and explain why they are relavent to our analysis.
+
+Firstly, we caculate the mean temperature of each country in the past 5 years. There is a trend that warm weather could help to reduce the spread of the coronavirus. So we want to varify if the temperature has significant relationship with the virus spread.    
+
+```{r,echo=F,results=T,message=F}
+world <- map_data("world");
+temp1 <- read.csv("temp1.csv",
+               header = FALSE)
+names(temp1)[names(temp1) == "V1"] <- "region"
+names(temp1)[names(temp1) == "V2"] <- "temperature"
+tempreture_world<- inner_join(world, temp1, by = "region")
+
+fig.map  <- ggplot() +
+  geom_polygon(data = tempreture_world, aes(x=long, y = lat, group = group,fill=temperature)) + 
+  coord_fixed(1.2)
+fig.map
+```
+
+Secondly, we present the age structure of each country. We acquired the population of 0-15, 15-64 and above 64 in each country. The reasonwe consider age structure is that older people has an increased risk of severe illness. Therefore, we want to investigate the relationship between age structure and covid-19 situation.
+
+
+```{r,echo=F,results=T,message=F}
+world <- map_data("world");
+
+world$region[world$region=="North Korea"] <- "Democratic People's Republic of Korea"
+world$region[world$region=="South Korea"] <- "Republic of Korea"
+world$region[world$region=="Iran"] <- "Iran (Islamic Republic of)"
+world$region[world$region=="USA"] <- "United States of America"
+world$region[world$region=="Republic of Congo"] <- "Congo"
+world$region[world$region=="Russia"] <- "Russian Federation"
+world$region[world$region=="Czech Republic"] <- "Czechia"
+world$region[world$region=="Bolivia"] <- "Bolivia (Plurinational State of)"
+world$region[world$region=="Venezuela"] <- "Venezuela (Bolivarian Republic of)"
+world$region[world$region=="UK"] <- "The United Kingdom"
+world$region[world$region=="Ivory Coast"] <- "Côte d’Ivoire"
+world$region[world$region=="Tanzania"] <- "United Republic of Tanzania"
+world$region[world$region=="Moldova"] <- "Republic of Moldova"
+world$region[world$region=="Swaziland"] <- "Eswatini"
+world$region[world$region=="Vietnam"] <- "Viet Nam"
+world$region[world$region=="Laos"] <- "Lao People's Democratic Republic"
+
+Age_65up <- read.csv("Age_65up.csv",
+               header = FALSE)
+names(Age_65up)[names(Age_65up) == "V1"] <- "region"
+names(Age_65up)[names(Age_65up) == "V2"] <- "Population_Age_65up"
+Age_65up_world<- inner_join(world, Age_65up, by = "region")
+
+fig.map  <- ggplot() +
+  geom_polygon(data = Age_65up_world, aes(x=long, y = lat, group = group,fill=Population_Age_65up)) + 
+  coord_fixed(1.3)
+fig.map
+
+
+Age_1564 <- read.csv("Age_15_64.csv",
+               header = FALSE)
+names(Age_1564)[names(Age_1564) == "V1"] <- "region"
+names(Age_1564)[names(Age_1564) == "V2"] <- "Population_Age_15_64"
+Age_1564_world<- inner_join(world, Age_1564, by = "region")
+
+fig.map  <- ggplot() +
+  geom_polygon(data = Age_1564_world, aes(x=long, y = lat, group = group,fill=Population_Age_15_64)) + 
+  coord_fixed(1.3)
+fig.map
+
+
+Age_under14 <- read.csv("Age_under14.csv",
+               header = FALSE)
+names(Age_under14)[names(Age_under14) == "V1"] <- "region"
+names(Age_under14)[names(Age_under14) == "V2"] <- "Population_Age_under14"
+Age_under14_world<- inner_join(world, Age_under14, by = "region")
+
+fig.map  <- ggplot() +
+  geom_polygon(data = Age_under14_world, aes(x=long, y = lat, group = group,fill=Population_Age_under14)) + 
+  coord_fixed(1.2)
+fig.map
+
+
+```
+
+
+Thirdly, we show the hospital beds per 10000 population has in each country. This is a objective metric which reflect the health care of the country. We want to study the relationship between the case-mortality rate and hospital beds per 10000 population.
+
+
+
+```{r,echo=F,results=T,message=F}
+world <- map_data("world");
+beds1 <- read.csv("beds1.csv",
+               header = FALSE)
+names(beds1)[names(beds1) == "V1"] <- "region"
+names(beds1)[names(beds1) == "V2"] <- "Beds_per_10000_population"
+beds_world<- inner_join(world, beds1, by = "region")
+
+fig.map  <- ggplot() +
+  geom_polygon(data = beds_world, aes(x=long, y = lat, group = group,fill=Beds_per_10000_population)) + 
+  coord_fixed(1.3)
+fig.map
+
+```
+
+Then, we also consider the population density as a relavent variable because a main transmission of the coronavirus is human to human. Therefore, it's meaningful to study the influence of population density has on the transmission of coronavirus in country level. In the figure, most of the map are dark. This is because the countres have high population density are very small.
+
+```{r,echo=F,results=T,message=F}
+world <- map_data("world");
+
+world$region[world$region=="North Korea"] <- "Democratic People's Republic of Korea"
+world$region[world$region=="South Korea"] <- "Republic of Korea"
+world$region[world$region=="Iran"] <- "Iran (Islamic Republic of)"
+world$region[world$region=="USA"] <- "United States of America"
+world$region[world$region=="Republic of Congo"] <- "Congo"
+world$region[world$region=="Russia"] <- "Russian Federation"
+world$region[world$region=="Czech Republic"] <- "Czechia"
+world$region[world$region=="Bolivia"] <- "Bolivia (Plurinational State of)"
+world$region[world$region=="Venezuela"] <- "Venezuela (Bolivarian Republic of)"
+world$region[world$region=="UK"] <- "The United Kingdom"
+world$region[world$region=="Ivory Coast"] <- "Côte d’Ivoire"
+world$region[world$region=="Tanzania"] <- "United Republic of Tanzania"
+world$region[world$region=="Moldova"] <- "Republic of Moldova"
+world$region[world$region=="Swaziland"] <- "Eswatini"
+world$region[world$region=="Vietnam"] <- "Viet Nam"
+world$region[world$region=="Laos"] <- "Lao People's Democratic Republic"
+
+
+popden1 <- read.csv("populationDensitycsvData.csv",
+               header = FALSE)
+names(popden1)[names(popden1) == "V1"] <- "region"
+names(popden1)[names(popden1) == "V2"] <- "Population_density"
+popden_world<- inner_join(world, popden1, by = "region")
+
+fig.map  <- ggplot() +
+  geom_polygon(data = popden_world, aes(x=long, y = lat, group = group,fill=Population_density)) + 
+  coord_fixed(1.3)
+fig.map
+
+```
+
+Finally, we acquire the Gross domestic savings (GDS) data of every country. We consider this factor because if a country has more savings, it will have more resources to contain the virus. For example, in a country which has more GDS, the people may have more savings which allows them to stay at home, the government has more money to buy healthecare supplys.
+
+```{r,echo=F,results=T,message=F}
+
+GDS <- read.csv("GDS.csv",
+               header = FALSE)
+names(GDS)[names(GDS) == "V1"] <- "region"
+names(GDS)[names(GDS) == "V2"] <- "GDS(in dollar)"
+GDS<-GDS[complete.cases(GDS), ]
+head(GDS)
+```
+## 3.Ourworldindata dataset
+In addition, we acquired the dataset of lockdown, contact tracing and stringency-index of different countries from ourworldindata website [10-12]. Next, we will introduce these factors one by on.
+
+Firstly, the lockdown data shows that if the country has lockdown policy during the pandemic. We consider this factor because lockdown is always considered to be the most harsh measure a government to take to contain the virus. It will block most of the transmission ways of the virus.
+
+Secondly, the contact tracing data indicates if a country implemented a contact tracing policy during the pandemic. Contact tracing is another method which can help to identify the high risk region and help people to avoid going to high risk palces.
+
+Finally,the Oxford Coronavirus Government Response Tracker (OxCGRT) project calculate a Government Stringency Index, a composite measure of nine of the response metrics. The nine metrics used to calculate the Government Stringency Index are: school closures; workplace closures; cancellation of public events; restrictions on public gatherings; closures of public transport; stay-at-home requirements; public information campaigns; restrictions on internal movements; and international travel controls.
+The index on any given day is calculated as the mean score of the nine metrics, each taking a value between 0 and 100.A higher score indicates a stricter government response (i.e. 100 = strictest response). If policies vary at the subnational level, the index is shown as the response level of the strictest sub-region. To measure the overall response of the countries during the pandemic, we take the avergage value of the Stringency Index of each country during the pandemic. Then we analysis the relationship between the Stringency Index and the situation of the pandemic.
+
+```{r,echo=F,results=T,message=F}
+world <- map_data("world");
+stringency1 <- read.csv("stringency-index1.csv",
+               header = FALSE)
+names(stringency1)[names(stringency1) == "V1"] <- "region"
+names(stringency1)[names(stringency1) == "V2"] <- "StringencyIndex"
+stringency_world<- inner_join(world, stringency1, by = "region")
+
+fig.map  <- ggplot() +
+  geom_polygon(data = stringency_world, aes(x=long, y = lat, group = group,fill=StringencyIndex)) + 
+  coord_fixed(1.3)
+fig.map
+
+```
+
+
+```{r,echo=F,message=FALSE}
+library(readr)
+library(dplyr)
+
+Summary_data <- read_csv("Summary data.csv")
+Summary_data = na.omit(Summary_data)
+
+data.1 = Summary_data%>%select(Cumulative_cases,popdensity,lockdown,tracing,StringencyIndex,Beds_per_10000_population,Age_65up,Age_15_64,Age_0_14,temperature,GDS)
+data.1$lockdown = as.factor(data.1$lockdown)
+data.1$tracing = as.factor(data.1$tracing)
+
+data.2 = Summary_data%>%select(Cumulative_deaths,popdensity,lockdown,tracing,StringencyIndex,Beds_per_10000_population,Age_65up,Age_15_64,Age_0_14,temperature,GDS)
+data.2$lockdown = as.factor(data.2$lockdown)
+data.2$tracing = as.factor(data.2$tracing)
+
+data.3 = Summary_data%>%select(Cumulative_cases,Cumulative_deaths,popdensity,lockdown,tracing,StringencyIndex,Beds_per_10000_population,Age_65up,Age_15_64,Age_0_14,temperature,GDS)
+data.3$lockdown = as.factor(data.1$lockdown)
+data.3$tracing = as.factor(data.1$tracing)
+```
+
+
+### Model description
+
+To answer the question of interest, we choose to use the first order linear regression model. Since most of our variables other than response variable does not have strong relation with each other thus we do not consider the case of interaction term. So our response variable will be "Cumulative Cases" and "Cumulative deaths", other variables are "popdensity", "lockdown","tracing","Stringencyindex","Beds per 10000 population", "Age 65up","Age 15-64","0_14","temperature","GDS".
+
+In this way the model will be $Y = \beta X +\epsilon$, Where Y represent the "Cumulative Cases" and "Cumulative deaths", vector of response variables.
+X represents the vector that contain all the variables and its observations. $\beta$ represent the regression coefficient vector. And ϵ is the scalar residual term. and the gold of our model is to subset a best model from the full model that can indicate which variables does most effects to our response variables. And we will select the best subset model form the full model by the following criterion: adjusted R square (Bigger is better), AIC and BIC(stands for Akaike's Information Criteria and Bayesian Information Criteria, lower is better)
+
+### Results and explaination
+#### 1. Cumulative Cases
+First we need to find which variables has the significant association with the Cumulative Cases. 
+```{r,echo = F,message=FALSE,warning=FALSE}
+fit1 = lm(Cumulative_cases~., data = data.1)
+mse = anova(fit1)["Residuals",3]#MSE  = 4.386225e+12
+
+library(leaps)
+sub_set1 = regsubsets(Cumulative_cases~., data = data.1,nbest = 1,nvmax = 10,method = "exhaustive")
+sum1 = summary(sub_set1)
+n= nrow(data.1)
+p.m1 =as.integer(as.numeric(rownames(sum1$which))+1)
+sse = sum1$rss
+aic = n*log(sse/n)+2*p.m1
+bic = n*log(sse/n)+log(n)*p.m1
+res_sub1 = cbind(sum1$which,sse,sum1$rsq,sum1$adjr2,sum1$cp,aic,bic)
+
+fit0 = lm(Cumulative_cases ~ 1,data = data.1)
+sse0 = sum(fit0$residuals^2)
+p = 1
+c1 =sse0/mse - (n-2*p)
+aic1 = n*log(sse0/n)+2*p
+bic1 = n*log(sse0/n)+log(n)*p
+none = c(1,rep(0,10),sse0,0,0,c1,bic1,aic1)
+res_sub1 = rbind(none,res_sub1)
+colnames(res_sub1) = c(colnames(sum1$which),"sse","R^2","R^2_a","Cp","aic","bic")
+res_sub1
+```
+
+After we got the result from the subset models, we got the following best model: 
+
+Based on adjusted R square : Model 6, model with lock down status: no, StringencyIndex, Age_15_64, Age_0_14, Temperature, GDS
+
+Based on the AIC, Model 4, model with Age_15_64, Age_0_14, Temperature, GDS.
+
+Based on the BIC, model 3, model with Age_15_64, Age_0_14, GDS.
+
+To testify our result, we can also use the forward/backward stepwise procedure, using both AIC and BIC to check the result. 
+
+```{r,echo=F,message=FALSE,results=F}
+library(MASS)
+step.f1 = stepAIC(fit0, scope = list(upper = fit1,lower = ~1),trace = 1,direction = "both",k=2)
+```
+
+```{r,echo=F,message=F}
+step.f1$anova
+step.f1$coefficients
+```
+
+By the stepwise procedure we have the same result as we have before in the subset procedure. Model 4 is our best model. It conclude that the variables Age_15_64, Age_0_14, Temperature and GDS fit the linear regression model best. Thus we could say that the population of age between 15-64, population of age between 0-14, average Temperature and the Gross domestic savings have significant association with our Cumulative Cases. Also for our model, the regression coefficients vector is $[ \beta_0=6.152822e+05~  \beta_1=5.067040e-06~  \beta_2=1.833155e-01~  \beta_3=-7.090291e-02~  \beta_4=-3.252580e+04]$
+
+#### 2. Cumulative deaths
+Next, for the Cumulative deaths, we can construct another similar model as the previous section. 
+
+```{r,echo = F,message=FALSE,warning=FALSE}
+fit2 = glm(Cumulative_deaths~., data = data.2)
+mse2 = anova(fit2)["Residuals",3]
+
+library(leaps)
+sub_set2 = regsubsets(Cumulative_deaths~., data = data.2,nbest = 1,nvmax = 10,method = "exhaustive")
+sum2 = summary(sub_set2)
+n2= nrow(data.2)
+p.m2 =as.integer(as.numeric(rownames(sum2$which))+1)
+sse2 = sum2$rss
+aic2 = n2*log(sse2/n2)+2*p.m2
+bic2 = n2*log(sse2/n2)+log(n2)*p.m2
+res_sub2 = cbind(sum2$which,sse2,sum2$rsq,sum2$adjr2,sum2$cp,aic2,bic2)
+
+fit02 = glm(Cumulative_deaths ~ 1,data = data.2)
+sse02 = sum(fit02$residuals^2)
+p = 1
+c2 =sse02/mse2 - (n2-2*p)
+aic21 = n2*log(sse02/n2)+2*p
+bic21 = n2*log(sse02/n2)+log(n2)*p
+none2 = c(1,rep(0,10),sse02,0,0,c2,bic21,aic21)
+res_sub2 = rbind(none2,res_sub2)
+colnames(res_sub2) = c(colnames(sum2$which),"sse","R^2","R^2_a","Cp","aic","bic")
+res_sub2
+```
+
+Again by the same methods we have the following model:
+
+adjusted R^2: Model 5
+
+AIC: Model 5
+
+BIC: Model 3
+
+Again we apply the stepwise procedure 
+```{r,echo=F,message=FALSE,results=F}
+library(MASS)
+step.f2 = stepAIC(fit2,scope = list(upper = ~.,lower = fit02),trace = 1,direction = "both",k =2)
+```
+
+```{r,echo=F,message=F}
+step.f2$anova
+step.f2$coefficients
+```
+
+Again we could say that the Stringencyindex, population age between 15-64, population age between 0-14, average Temperature and the Gross domestic savings have the significant association with our Cumulative deaths.  Also for our model, the regression coefficients vector is $[ \beta_0=-1.024169e+04~  \beta_1=5.108359e+02~  \beta_2=3.157418e-03~  \beta_3=-6.403269e+02~  \beta_4=9.358548e-08]$
+
+#### 3. Case-mortality rate
+Finally, we can analyze the case-mortality rate.
+
+```{r,echo = F,message=FALSE,warning=FALSE}
+fit3 = lm(Cumulative_deaths/Cumulative_cases~., data = data.3)
+mse3 = anova(fit3)["Residuals",3]
+
+library(leaps)
+sub_set3 = regsubsets(Cumulative_deaths/Cumulative_cases~., data = data.3,nbest = 1,nvmax = 10,method = "exhaustive")
+sum3 = summary(sub_set3)
+n3 = nrow(data.3)
+p.m3 =as.integer(as.numeric(rownames(sum3$which))+1)
+sse3 = sum3$rss
+aic3 = n3*log(sse3/n3)+2*p.m3
+bic3 = n3*log(sse3/n3)+log(n3)*p.m3
+res_sub3 = cbind(sum3$which,sse3,sum3$rsq,sum3$adjr2,sum1$cp,aic3,bic3)
+
+fit03 = lm(Cumulative_deaths/Cumulative_cases ~ 1,data = data.3)
+sse03 = sum(fit03$residuals^2)
+p = 1
+c31 =sse03/mse3 - (n3-2*p)
+aic31 = n3*log(sse03/n3)+2*p
+bic31 = n3*log(sse03/n3)+log(n3)*p
+none3 = c(1,rep(0,10),sse03,0,0,c31,bic31,aic31)
+res_sub3 = rbind(none3,res_sub3)
+colnames(res_sub3) = c(colnames(sum3$which),"sse","R^2","R^2_a","Cp","aic","bic")
+res_sub3
+```
+Finally by the same methods we have the following model:
+
+adjusted R^2: Model 1
+
+AIC: Model 4
+
+BIC: Model 1
+
+Again we apply the stepwise procedure 
+
+```{r,echo=F,message=FALSE,results=F}
+library(MASS)
+step.f3 = stepAIC(fit3,scope = list(upper = ~.,lower = fit03),trace = 1,direction = "both",k =2)
+```
+
+```{r,echo=F,message=F}
+step.f3$anova
+step.f3$coefficients
+```
+Finally we could say that the Stringencyindex, popdensity, tracing,  and Age_65up have the significant association with case-mortality rate.  Also for our model, the regression coefficients vector is $[ \beta_0= 1.616851e-02~  \beta_1=-2.954249e-06 2~  \beta_2=-4.992233e-03~  \beta_3=1.364362e-04~  \beta_4=1.315491e-10]$
+
+### Causal Interpretation of the propesed model.
+
+If we want to analyze on the causal interpretation, we could find some new models for the binary vairable, contact tracing and lockdown. Therefore, we conduct 3 tests for cumulative cases, cumulative deaths, case-mortality rate respectively,
+
+#### Test 1
+Test 1 is to test whether the causal effect term will have strong relationship with the cumulative cases. 
+
+Test on the binomial variable "lockdown"
+```{r,echo = F,warning=F}
+tmodel1 = glm(lockdown~Age_15_64+Age_0_14+temperature+GDS,family = binomial,data = data.1)
+prob1 = tmodel1$fitted.values
+pscore1 = ifelse(data.1$lockdown=='lockdown',prob1,(1-prob1))
+ 
+weight1 = 1/pscore1
+ 
+tfit1 = lm(Cumulative_cases~lockdown+Age_15_64+Age_0_14+temperature+GDS,data=data.1,weights = weight1)
+summary(tfit1)
+```
+
+Test on the binomial variable "tracing"
+
+```{r,echo = F,warning=F}
+tmodel2 = glm(tracing~Age_15_64+Age_0_14+temperature+GDS,family = binomial,data = data.1)
+prob2 = tmodel2$fitted.values
+pscore2 = ifelse(data.2$tracing=='Yes',prob2,(1-prob2))
+ 
+weight2 = 1/pscore2
+ 
+tfit2 = lm(Cumulative_cases~tracing+Age_15_64+Age_0_14+temperature+GDS,data=data.1,weights = weight2)
+summary(tfit2)
+```
+
+#### Test 2
+
+Test 2 is to test whether the causal effect term will have strong relationship with the cumulative deaths. 
+
+Test on the binomial variable "lockdown"
+
+```{r,echo = F,warning=F}
+tmodel1.2 = glm(lockdown~StringencyIndex+Age_15_64+Age_0_14+temperature+GDS,family = binomial,data = data.2)
+prob1.2 = tmodel1.2$fitted.values
+pscore1.2 = ifelse(data.2$lockdown=='lockdown',prob1.2,(1-prob1.2))
+ 
+weight1.2 = 1/pscore1.2
+ 
+tfit1.2 = lm(Cumulative_deaths~lockdown+Age_15_64+Age_0_14+temperature+GDS,data=data.2,weights = weight1.2)
+summary(tfit1.2)
+```
+
+Test on the binomial variable "tracing"
+
+```{r,echo=F,results=T,message=F}
+tmodel2.2 = glm(tracing~StringencyIndex+Age_15_64+Age_0_14+temperature+GDS,family = binomial,data = data.2)
+prob2.2 = tmodel2.2$fitted.values
+pscore2.2 = ifelse(data.2$tracing=='Yes',prob2.2,(1-prob2.2))
+ 
+weight2.2 = 1/pscore2.2
+ 
+tfit2.2 = lm(Cumulative_deaths~tracing+StringencyIndex+Age_15_64+Age_0_14+temperature+GDS,data=data.2,weights = weight2.2)
+summary(tfit2.2)
+```
+
+#### Test 3
+
+Test 3 is to test whether the causal effect term will affect case-mortality rate.
+
+Test on the binomial variable "lockdown"
+
+```{r,echo=F,warning=F}
+tmodel3.1 = glm(lockdown~popdensity + tracing + StringencyIndex + Age_65up,family = binomial,data = data.3)
+prob3.1 = tmodel3.1$fitted.values
+pscore3.1 = ifelse(data.3$lockdown=='lockdown',prob3.1,(1-prob3.1))
+ 
+weight3.1 = 1/pscore3.1
+ 
+tfit3.1 = glm(Cumulative_deaths/Cumulative_cases~lockdown+popdensity + tracing + StringencyIndex + Age_65up,data=data.3,weights = weight3.1)
+summary(tfit3.1)
+```
+
+Test on the binomial variable "tracing"
+
+```{r,echo=F,results=T,message=F,warning=F}
+tmodel3.2 = glm(tracing~popdensity + tracing + StringencyIndex + Age_65up,family = binomial,data = data.3)
+prob3.2 = tmodel3.2$fitted.values
+pscore3.2 = ifelse(data.3$tracing=='Yes',prob3.2,(1-prob3.2))
+ 
+weight3.2 = 1/pscore3.2
+ 
+tfit3.2 = lm(Cumulative_deaths/Cumulative_cases~tracing+Age_15_64+Age_0_14+temperature+GDS,data=data.3,weights = weight3.2)
+summary(tfit3.2)
+```
+
+From the three tests, most of the causal effect factors do not have strong relationship with our response variables, Cumulative cases, cumulative deaths and case-mortality rate since these P-value are too big. However, contact tracing seems to have a negative causal effect on case-mortality rate since the p-value of the test is 0.0419. The reason for this may be, contact tracing can help people avoid the high risk area and so it helps to reduce the 
+probability that too many patients flow into the hospital. Therefore, the hosipital can have enough resources and time to cure the existing patient and less deaths would occur.
+
+### Model Diagnostics
+
+First, we diagnostic the Cumulative Cases model
+
+```{r,echo=F}
+plot(step.f1, which = 1)
+```
+
+In the Residuals vs Fitted plot, the assumption of linearity might be violatd. The red line, which is the mean residual value, goes down and goes far away from 0 across the fitted values. Yet that might be cuased by the outliers. The homoscedasticity assumption might not hold too, since the spread of the data points increase from left to right. 
+
+```{r,echo=F}
+plot(step.f1, which = 3)
+```
+
+In the Scale-Location plot, the spread of the data points is lowest on the right and highest on the left, so it verifies  the heteroskedasticity problem.
+
+```{r,echo=F}
+plot(step.f1, which = 2)
+```
+
+In the Normal Q-Q plot, the data points approximately fall on the line, with a few outliers as exceptions. That means the normality assumption holds.
+
+Second, we diagnostic the Cumulative Death model
+```{r,echo=F}
+plot(step.f2, which = 1)
+```
+
+In the Residuals vs Fitted plot, the assumption of linearity holds. The red line looks strange at the beginning, but after Predicted values = 10000, all the changes are caused by three outliers. The assumption of homoscedasticity is violated. Ignore the outliers and focus on the data points where Predicted values <= 100000, the spread of the data points increase from left to right.
+
+```{r,echo=F}
+plot(step.f2, which = 3)
+```
+
+This Scale-Location plot verifies the violation of homoscedasticity. The spread of the data points is lowest on the right and highest on the left.
+
+```{r,echo=F}
+plot(step.f2, which = 2)
+```
+
+There are some outliers, but most of the data points are on the line, and the normality assumption likely holds.
+
+Finally, we diagnostic the case-mortality rate model
+```{r,echo=F}
+plot(step.f3, which = 1)
+```
+
+In the Residuals vs Fitted plot, the linearity assumption holds because the red line is very close to  across the Fitted values. The homoscedasticity assumption holds, too, since the data points spread evenly across the major part of Fitted values (which is from 0.01 to 0.03). 
+
+```{r,echo=F}
+plot(step.f3, which = 3)
+```
+
+This Scale-Location plot verifies that the homoscedasticity assumption holds. The red line is approximately horizontal, and except some outliers, the spread of data points does not vary too much.
+
+```{r,echo=F}
+plot(step.f3, which = 2)
+```
+
+In this Normal Q-Q plot, there are some point deviates from the dash line, but most of the points are on the lines. The normality assumption is probability hold.
+
+### Conclusion
+This project focus on three questions: which variables affect cumulative cases, cumulative death, and the case-mortality rate. 
+
+Cumulative Cases is highly associated with Gross Domestic Saving, population of age 0-14, population of age 15-64, and average temperature. Gross Domestic Saving is the average saving of people, which can be used to evaluate how much time people can stay at home without working. Before this project, we thought higher GDS indicates lower cumulative cases, since people can stop working for longer time and stay at home to reduce exposure. However, our analysis shows they are positively related. That might because different countries have different life expenses, which causes GDS can not correctly represent the stop working duration. Or it might because during lockdown, people who can not work with more saving are more willingly to have fun outside. Age 0-14 is positively related with cumulative cases and age 15-64 is negatively related with cumulative cases. That might because younger people are less willingly stay at home all day, and exposure rate is increased with they are outside of their house. Temperature is negatively related with cumulative cases. That make sense because virus can be reduced by the heat. But we have to say only a warm environment is not enough to stop the pandemic.
+
+The cumulative deaths is highly associated with stringency index,  population of age 0-14,  population of age 15-64, temperature and GDS. Stringency index is a measure of the level of restrictions taken by a country to stop the pandemic. In our result, stringency index is positively related with cumulative deaths, which means with the higher level of Stringency index, cumulative death increases. It make no sense to conclude that Stringency index increases number of death, but we can think reversely: with more people die, governments took more actions which increased the Stringency index. Age 0-14 is positively related with cumulative deaths and age 15-64 is negatively related with cumulative deaths. The immune system of kids are usually weaker than adults, so be adults is an advantage. Average temperature of the country is negatively related with cumulative death; as states before, heat can reduce some virus. Gross Domestic Saving is positively related with cumulative death, and that might be a connection with cumulative cases: more GDS leads to more cases, and more cases lead to more death.
+
+Case-mortality rate, is highly associated with population density, stringency index, tracing, and population of age 65+. Our result shows population density is negatively assocaited with case-mortality rate. This is because a high popudentsity means people can get together easily and the virus is easier to spread. The policy of tracing is negatively related with case-mortality rate. That might because this policy help hospitals and governments find out patients early, and provide treatment earlier. More importantly, according to our causal interpretation, conact tracing has causal effect on the case-mortality rate. Stringency index is positively related with case-mortality rate. The potential explanation is the societies lose function with higher level of restriction, and cause the case-mortality rate increases. Age 65+ has higher case-mortality rate, and that is our common sense; older people have weaker immune system, and a lot of deaths happen in nursing houses. 
+
+In addition, we need to note that in our analysis, some factors of some countries are missing. For example, the WorldBank doesn't provide the GDS for some sountries, like Andorra, Yemen and so on. But the main economies and most populated countries are all included in our analysis. So we believe these missing data would not affect the correctness of our analysis.
+
+# References
+[1].https://www.cdc.gov/coronavirus/2019-ncov/cdcresponse/about-COVID-19.html
+
+[2].https://en.wikipedia.org/wiki/Coronavirus_disease_2019.
+
+[3].https://www.npr.org/sections/health-shots/2021/01/28/960901166/how-is-the-covid-19-vaccination-campaign-going-in-your-state
+
+[4].https://covid19.who.int/WHO-cOVID-19-global-data.csv
+
+[5].https://climateknowledgeportal.worldbank.org/download-data
+
+[6].https://data.worldbank.org/indicator
+
+[7].https://data.worldbank.org/indicator/SH.MED.BEDS.ZS
+
+[8].https://data.worldbank.org/indicator/NY.GDS.TOTL.CD
+
+[9].https://data.worldbank.org/indicator/EN.POP.DNST
+
+[10].https://www.acaps.org/covid-19-government-measures-dataset
+
+[11].https://ourworldindata.org/grapher/covid-contact-tracing?stackMode=absolute&country=&region=World
+
+[12].https://ourworldindata.org/covid-government-stringency-index#government-stringency-index
