@@ -15,11 +15,11 @@ The Covid-19 pandemic has lasted more than one year. Although there are hopes of
 
 The data set we apply in this project are from the WHO, the WorldBank and ourworldindata websites. The WHO dataset provides the daily covid-19 situations of all countries in the world, including daily new cases, new deaths, culmulative cases and culmulative deaths. The data sets we extracted from WorldBank including the monthly temperature of the last five years, age struture, hospital beds per 10,000 poipulation, Gross domestic savings (GDS), population density of most countries in the world. Finally, we acquired the dataset of lockdown and contact tracing of different countries from ourworldindata website.
 
-With these data, we want to answer three questions:
+Within these variables, we want to answer three questions:
 (1)which variables could affect cumulative cases;
 (2)which variables could affect cumulative death;
 (3)which variables could affect the case-mortality rate.
-
+Note that we only consider the variables mentioned in last paragraph.
 ## Background of COVID 19
 
 Coronavirus disease 2019 (COVID-19) is caused by a new coronavirus first identified in Wuhan, China, in December 2019. Most people who have COVID-19 have mild symptoms(fever, cough, fatigue, breathing difficulties, and loss of smell and taste), but this disease cause severe illness and even death. Moreover the symptoms are not going to begin immediately, it will begin one to fourteen days after exposure to the virus [1]. This make the virus harder to identify and contain.
@@ -141,7 +141,7 @@ fig.map
 
 
 
-Next, we show the daily new cases and daily deaths of the 10 countries during the pandemic. From the following two tables, we can see that, some countries (e.g. India) only have one peak in the curve and other countries (e.g. USA and UK) have more than one peaks in the curve. This result indicates that in some countries the conditions about the spread or testing of covid 19 is not stable. For example, the daily testing ability, the restriction of residents could change during the pandemic several times.
+Next, we show the trend of daily new cases and daily deaths of the 10 countries during the pandemic. From the following two tables, we can see that, some countries (e.g. India) only have one peak in the curve and other countries (e.g. USA and UK) have more than one peaks in the curve. This result indicates that in some countries the conditions about the spread or testing of covid 19 is not stable. For example, the daily testing ability, the restriction of residents could change during the pandemic several times.
 
 ```{r,echo=F,results=T,message=F}
 ## Maps #### 
@@ -153,7 +153,7 @@ fig.spaghetti.1 <- top10_cases_covid_data %>%
   filter(Date_reported>= "2020-01-30", Date_reported<= "2021-03-01") %>% 
   mutate(Date=as.Date(Date_reported)) %>%
   ggplot(aes(x=Date,y=New_cases,by=Country)) +
-  geom_line(aes(color=Country)) +
+  geom_smooth(aes(color=Country)) +
   theme(legend.position ='left')
 fig.spaghetti.1   
 ```
@@ -164,7 +164,7 @@ fig.spaghetti.2 <- top10_cases_covid_data %>%
   filter(Date_reported>= "2020-01-30", Date_reported<= "2021-03-01") %>% 
   mutate(Date=as.Date(Date_reported)) %>%
   ggplot(aes(x=Date,y=New_deaths,by=Country)) +
-  geom_line(aes(color=Country)) +
+  geom_smooth(aes(color=Country)) +
   theme(legend.position ='left')
 fig.spaghetti.2  
 
@@ -362,49 +362,27 @@ fig.map
 
 ```
 
-Then, we also consider the population density as a relavent variable because a main transmission of the coronavirus is human to human. Therefore, it's meaningful to study the influence of population density has on the transmission of coronavirus in country level. In the figure, most of the map are dark. This is because the countres have high population density are very small.
+Then, we also consider the population density as a relavent variable because a main transmission of the coronavirus is human to human. Therefore, it's meaningful to study the influence of population density has on the transmission of coronavirus in country level. In the figure, most of the map are dark. This is because the countres have high population density are very small. The following table showthe population densities of some regions.
+
+
 
 ```{r,echo=F,results=T,message=F}
-world <- map_data("world");
 
-world$region[world$region=="North Korea"] <- "Democratic People's Republic of Korea"
-world$region[world$region=="South Korea"] <- "Republic of Korea"
-world$region[world$region=="Iran"] <- "Iran (Islamic Republic of)"
-world$region[world$region=="USA"] <- "United States of America"
-world$region[world$region=="Republic of Congo"] <- "Congo"
-world$region[world$region=="Russia"] <- "Russian Federation"
-world$region[world$region=="Czech Republic"] <- "Czechia"
-world$region[world$region=="Bolivia"] <- "Bolivia (Plurinational State of)"
-world$region[world$region=="Venezuela"] <- "Venezuela (Bolivarian Republic of)"
-world$region[world$region=="UK"] <- "The United Kingdom"
-world$region[world$region=="Ivory Coast"] <- "Côte d’Ivoire"
-world$region[world$region=="Tanzania"] <- "United Republic of Tanzania"
-world$region[world$region=="Moldova"] <- "Republic of Moldova"
-world$region[world$region=="Swaziland"] <- "Eswatini"
-world$region[world$region=="Vietnam"] <- "Viet Nam"
-world$region[world$region=="Laos"] <- "Lao People's Democratic Republic"
-
-
-popden1 <- read.csv("Data/populationDensitycsvData.csv",
+popden <- read.csv("Data/populationDensitycsvData.csv",
                header = FALSE)
-names(popden1)[names(popden1) == "V1"] <- "region"
-names(popden1)[names(popden1) == "V2"] <- "Population_density"
-popden_world<- inner_join(world, popden1, by = "region")
-
-fig.map  <- ggplot() +
-  geom_polygon(data = popden_world, aes(x=long, y = lat, group = group,fill=Population_density)) + 
-  coord_fixed(1.3)
-fig.map
-
+names(popden)[names(popden) == "V1"] <- "Region"
+names(popden)[names(popden) == "V2"] <- "Population density"
+popden<-popden[complete.cases(popden), ]
+head(popden)
 ```
 
-Finally, we acquire the Gross domestic savings (GDS) data of every country. We consider this factor because if a country has more savings, it will have more resources to contain the virus. For example, in a country which has more GDS, the people may have more savings which allows them to stay at home, the government has more money to buy healthecare supplys.
+Finally, we acquire the Gross domestic savings (GDS) data of every country. We consider this factor because if a country has more savings, it will have more resources to contain the virus. For example, in a country which has more GDS, the people may have more savings which allows them to stay at home, the government has more money to buy healthecare supplys. The following table showthe GDS of some regions.
 
 ```{r,echo=F,results=T,message=F}
 
 GDS <- read.csv("Data/GDS.csv",
                header = FALSE)
-names(GDS)[names(GDS) == "V1"] <- "region"
+names(GDS)[names(GDS) == "V1"] <- "Region"
 names(GDS)[names(GDS) == "V2"] <- "GDS(in dollar)"
 GDS<-GDS[complete.cases(GDS), ]
 head(GDS)
@@ -460,11 +438,17 @@ data.3$tracing = as.factor(data.1$tracing)
 
 To answer the question of interest, we choose to use the first order linear regression model. Since most of our variables other than response variable does not have strong relation with each other thus we do not consider the case of interaction term. So our response variable will be "Cumulative Cases" and "Cumulative deaths", other variables are "popdensity", "lockdown","tracing","Stringencyindex","Beds per 10000 population", "Age 65up","Age 15-64","0_14","temperature","GDS".
 
-In this way the model will be $Y = \beta X +\epsilon$, Where Y represent the "Cumulative Cases" and "Cumulative deaths", vector of response variables.
-X represents the vector that contain all the variables and its observations. $\beta$ represent the regression coefficient vector. And ϵ is the scalar residual term. and the gold of our model is to subset a best model from the full model that can indicate which variables does most effects to our response variables. And we will select the best subset model form the full model by the following criterion: adjusted R square (Bigger is better), AIC and BIC(stands for Akaike's Information Criteria and Bayesian Information Criteria, lower is better)
+In this way the model will be $Y = \beta X +\epsilon$, Where Y represent the "Cumulative Cases" and "Cumulative deaths", vector of response variables.  
 
-### Results and explaination
-#### 1. Cumulative Cases
+
+
+X represents the vector that contain all the variables and its observations. $\beta$ represent the regression coefficient vector.And ϵ is the scalar residual term. And the goal of our model is to subset a best model from the full model that can indicate which variables does most effects to our response variables. And we will select the best subset model form the full model by the following criterion: adjusted R square (Bigger is better), AIC and BIC(stands for Akaike's Information Criteria and Bayesian Information Criteria, lower is better)
+
+The reasons to use the linear regression model is because this model is reliable when analyzing few variables, since we only have 10 variables here and we will remove most of them in the subset procedure. Also linear regression model is easy to analyze and easy to construct which improve the efficiency of our project. 
+
+Also after we got the subset model we will double check the result by the stepwise procedure, even though it is an old and primitive methods, the accuracy of such methods is well guaranteed while doing selection on the linear regression model. And most importantly this method is easily to access and being used for many years which proved its reliability. 
+
+### Results and explaination 
 First we need to find which variables has the significant association with the Cumulative Cases. 
 ```{r,echo = F,message=FALSE,warning=FALSE}
 fit1 = lm(Cumulative_cases~., data = data.1)
@@ -512,10 +496,9 @@ step.f1$anova
 step.f1$coefficients
 ```
 
-By the stepwise procedure we have the same result as we have before in the subset procedure. Model 4 is our best model. It conclude that the variables Age_15_64, Age_0_14, Temperature and GDS fit the linear regression model best. Thus we could say that the population of age between 15-64, population of age between 0-14, average Temperature and the Gross domestic savings have significant association with our Cumulative Cases. Also for our model, the regression coefficients vector is $[ \beta_0=6.152822e+05~  \beta_1=5.067040e-06~  \beta_2=1.833155e-01~  \beta_3=-7.090291e-02~  \beta_4=-3.252580e+04]$
+By the stepwise procedure we have the same result as we have before in the subset procedure. Model 4 will be our best model. Which conclude that the variables Age_15_64, Age_0_14, Temperature and GDS fit the linear regression model best. Thus we could say that the population age between 15-64, population age between 0-14, average Temperature and the Gross domestic savings have the significant association with our Cumulative Cases. Also for our model, the regression coefficients vector is $[ \beta_0=6.152822e+05~  \beta_1=5.067040e-06~  \beta_2=1.833155e-01~  \beta_3=-7.090291e-02~  \beta_4=-3.252580e+04]$
 
-#### 2. Cumulative deaths
-Next, for the Cumulative deaths, we can construct another similar model as the previous section. 
+Continue with the Cumulative death, we can construct another similar model for it. 
 
 ```{r,echo = F,message=FALSE,warning=FALSE}
 fit2 = glm(Cumulative_deaths~., data = data.2)
@@ -564,8 +547,7 @@ step.f2$coefficients
 
 Again we could say that the Stringencyindex, population age between 15-64, population age between 0-14, average Temperature and the Gross domestic savings have the significant association with our Cumulative deaths.  Also for our model, the regression coefficients vector is $[ \beta_0=-1.024169e+04~  \beta_1=5.108359e+02~  \beta_2=3.157418e-03~  \beta_3=-6.403269e+02~  \beta_4=9.358548e-08]$
 
-#### 3. Case-mortality rate
-Finally, we can analyze the case-mortality rate.
+Finally we can analyze on the term $\frac{Cumulative~cases}{Cumulative~deaths}$
 
 ```{r,echo = F,message=FALSE,warning=FALSE}
 fit3 = lm(Cumulative_deaths/Cumulative_cases~., data = data.3)
@@ -611,102 +593,28 @@ step.f3 = stepAIC(fit3,scope = list(upper = ~.,lower = fit03),trace = 1,directio
 step.f3$anova
 step.f3$coefficients
 ```
-Finally we could say that the Stringencyindex, popdensity, tracing,  and Age_65up have the significant association with case-mortality rate.  Also for our model, the regression coefficients vector is $[ \beta_0= 1.616851e-02~  \beta_1=-2.954249e-06 2~  \beta_2=-4.992233e-03~  \beta_3=1.364362e-04~  \beta_4=1.315491e-10]$
+Finally we could say that the Stringencyindex, popdensity, tracing,  and Age_65up have the significant association with ratio between Cumulative deaths and Cumulative cases.  Also for our model, the regression coefficients vector is $[ \beta_0= 1.616851e-02~  \beta_1=-2.954249e-06 2~  \beta_2=-4.992233e-03~  \beta_3=1.364362e-04~  \beta_4=1.315491e-10]$
+
+And sometimes we will get the over fit coefficient in the model, and the reason is because the observation value for those variables is quite big compare to other variables, such as for the GDS, the average value of the GDS is about 160 billion which is way bigger than other variables. 
 
 ### Causal Interpretation of the propesed model.
-
-If we want to analyze on the causal interpretation, we could find some new models for the binary vairable, contact tracing and lockdown. Therefore, we conduct 3 tests for cumulative cases, cumulative deaths, case-mortality rate respectively,
-
-#### Test 1
-Test 1 is to test whether the causal effect term will have strong relationship with the cumulative cases. 
-
-Test on the binomial variable "lockdown"
-```{r,echo = F,warning=F}
-tmodel1 = glm(lockdown~Age_15_64+Age_0_14+temperature+GDS,family = binomial,data = data.1)
-prob1 = tmodel1$fitted.values
-pscore1 = ifelse(data.1$lockdown=='lockdown',prob1,(1-prob1))
- 
-weight1 = 1/pscore1
- 
-tfit1 = lm(Cumulative_cases~lockdown+Age_15_64+Age_0_14+temperature+GDS,data=data.1,weights = weight1)
-summary(tfit1)
-```
-
-Test on the binomial variable "tracing"
-
-```{r,echo = F,warning=F}
-tmodel2 = glm(tracing~Age_15_64+Age_0_14+temperature+GDS,family = binomial,data = data.1)
-prob2 = tmodel2$fitted.values
-pscore2 = ifelse(data.2$tracing=='Yes',prob2,(1-prob2))
- 
-weight2 = 1/pscore2
- 
-tfit2 = lm(Cumulative_cases~tracing+Age_15_64+Age_0_14+temperature+GDS,data=data.1,weights = weight2)
-summary(tfit2)
-```
-
-#### Test 2
-
-Test 2 is to test whether the causal effect term will have strong relationship with the cumulative deaths. 
-
-Test on the binomial variable "lockdown"
-
-```{r,echo = F,warning=F}
-tmodel1.2 = glm(lockdown~StringencyIndex+Age_15_64+Age_0_14+temperature+GDS,family = binomial,data = data.2)
-prob1.2 = tmodel1.2$fitted.values
-pscore1.2 = ifelse(data.2$lockdown=='lockdown',prob1.2,(1-prob1.2))
- 
-weight1.2 = 1/pscore1.2
- 
-tfit1.2 = lm(Cumulative_deaths~lockdown+Age_15_64+Age_0_14+temperature+GDS,data=data.2,weights = weight1.2)
-summary(tfit1.2)
-```
-
-Test on the binomial variable "tracing"
-
-```{r,echo=F,results=T,message=F}
-tmodel2.2 = glm(tracing~StringencyIndex+Age_15_64+Age_0_14+temperature+GDS,family = binomial,data = data.2)
-prob2.2 = tmodel2.2$fitted.values
-pscore2.2 = ifelse(data.2$tracing=='Yes',prob2.2,(1-prob2.2))
- 
-weight2.2 = 1/pscore2.2
- 
-tfit2.2 = lm(Cumulative_deaths~tracing+StringencyIndex+Age_15_64+Age_0_14+temperature+GDS,data=data.2,weights = weight2.2)
-summary(tfit2.2)
-```
-
-#### Test 3
-
-Test 3 is to test whether the causal effect term will affect case-mortality rate.
-
-Test on the binomial variable "lockdown"
-
-```{r,echo=F,warning=F}
-tmodel3.1 = glm(lockdown~popdensity + tracing + StringencyIndex + Age_65up,family = binomial,data = data.3)
-prob3.1 = tmodel3.1$fitted.values
-pscore3.1 = ifelse(data.3$lockdown=='lockdown',prob3.1,(1-prob3.1))
- 
-weight3.1 = 1/pscore3.1
- 
-tfit3.1 = glm(Cumulative_deaths/Cumulative_cases~lockdown+popdensity + tracing + StringencyIndex + Age_65up,data=data.3,weights = weight3.1)
-summary(tfit3.1)
-```
-
-Test on the binomial variable "tracing"
-
-```{r,echo=F,results=T,message=F,warning=F}
+When we got those subsets model, we find that only model for the case-mortality rate have the binary variable tracing. And we want to check whether it is true by the casual inference, first we have checked the propensity score of this model.
+```{r,echo=F,warning=FALSE}
 tmodel3.2 = glm(tracing~popdensity + tracing + StringencyIndex + Age_65up,family = binomial,data = data.3)
 prob3.2 = tmodel3.2$fitted.values
 pscore3.2 = ifelse(data.3$tracing=='Yes',prob3.2,(1-prob3.2))
- 
+```
+
+Conduct the hypothesis test, we have $H_0$:The coefficient of the variables tracing is 0. $H_1$:The coefficient of the variables tracing is not 0.
+
+```{r,echo=F,warning=FALSE}
 weight3.2 = 1/pscore3.2
  
 tfit3.2 = lm(Cumulative_deaths/Cumulative_cases~tracing+Age_15_64+Age_0_14+temperature+GDS,data=data.3,weights = weight3.2)
 summary(tfit3.2)
 ```
 
-From the three tests, most of the causal effect factors do not have strong relationship with our response variables, Cumulative cases, cumulative deaths and case-mortality rate since these P-value are too big. However, contact tracing seems to have a negative causal effect on case-mortality rate since the p-value of the test is 0.0419. The reason for this may be, contact tracing can help people avoid the high risk area and so it helps to reduce the 
-probability that too many patients flow into the hospital. Therefore, the hosipital can have enough resources and time to cure the existing patient and less deaths would occur.
+And the test result suggest that we need to reject the null hypothesis. Then we have the conclusion that the tracing variable is associated with the case-mortality rate. And the possible reasons behind the conclusion might be those, in general the people are infected will pay more attention to all kinds of information regard to the pandemic, including the trace of other patient, by the trace information, they will avoid meeting with other patients or heavily loaded hospital. Which has raise their survival rate in somehow.  
 
 ### Model Diagnostics
 
@@ -786,6 +694,12 @@ shapiro.test(step.f3$residuals)
 
 The p-value is less than 3.898e-08, which implies that the distribution of the residuals are significantly different from normal distribution.
 
+```{r,echo=F}
+Summary_data[c(19, 28, 37, 57, 85, 95, 119, 133), 1]
+```
+
+These countries are the interest data points in the diagnostic plots. United States of America (#133) appears 6 times, and Brazil (#19) and China (#28) appear 4 times each. These countries have very harge national territorial and very complex, which make some predictive variables, such as average temperature, population density and stringency index, less representative. 
+
 ### Conclusion
 This project focus on three questions: which variables affect cumulative cases, cumulative death, and the case-mortality rate. 
 
@@ -799,7 +713,7 @@ It important to notes that the normality assumption in our models do not hold. F
 
 In addition, we need to note that in our analysis, some factors of some countries are missing. For example, the WorldBank doesn't provide the GDS for some sountries, like Andorra, Yemen and so on. But the main economies and most populated countries are all included in our analysis. So we believe these missing data would not affect the correctness of our analysis.
 
-In the future, we can further study the relationship of different factor is smaller scale level. For example we can focus on the data of different states in the US or even counties in California. In this way, it is possible to discover more detailed factors which have influence on the covid-19 situation.
+
 # References
 [1].https://www.cdc.gov/coronavirus/2019-ncov/cdcresponse/about-COVID-19.html
 
