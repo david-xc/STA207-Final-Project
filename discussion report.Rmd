@@ -1,0 +1,62 @@
+---
+title: "Project 3 Discussion Report"
+author: "Team 10 Zheyuan Yu, Xiaochuan Ma, Ziqin Wang"
+date: "3/12/2021"
+output:
+  html_document:
+    df_print: paged
+    number_sections: yes
+---
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(fig.pos = 'H')
+```
+
+
+# Overall impression
+
+ 
+
+
+
+This report Analysis about what factors affect the current pandemic of Covid 19. Cumulative cases, cumulative death, and case-mortality rate were used to measure the seriousness of the pandemic. Gross domestic saving (GDS), age, average temperature of each country, stringency index, population density, and tracing policy were found that have significant association with the seriousness of the pandemic. The flaws of this report include the effectiveness of the population density map, method that solve the assumption violation is insufficient, and New Case-Date and New Death-Date graphs should use week or month instead of day in x-axis. In addition, it will be better to make the questions of interest more specific.
+
+# Major comments 
+1.The questions of interests are a bit too general. It's better to restrict the questions as "What variables in the data set we have can affect the cumulative cases".
+
+
+2.In model diagnostic, some assumptions are found to be violated. It is good to admit the weakness of the report. However, stating the violation is not enough. This report should include some methods to fix the assumption violation problem, or at least explain why these assumptions are violated. 
+
+# Minor comments
+
+1.In the figure of the population density, most of the country have the same color. So the map can not help reader understand the data. It's better to use a table instead of the map. 
+
+2.In the New Case-Date and New Death-Date graphs, it might be better to resent them by week or month instead of day. It can make the patterns of the graphs become clearer. In addition, due to the working period of people, which is work from Monday to Friday and rest in weekend, the number of testing people do is affected. This issue causes the change of new cases between days is less representative. For example, less new cases in Saturday might just because less testing are done, not truely less new cases.
+
+# Summary
+
+
+Overall, this report is pretty good. The problems on graphs can be solved easily without change the result. The analysis or solution of the assumption violation should be included to make this report better. 
+
+
+# Questions to address during the final presentation
+
+1. Why you choose cumulative data rather than the daily data for analysis?
+
+Answer: This is because our intend is to study the overall severity of the Covid-19 situation. As you can see in the project, most of the variables we considered do not vary along with time, this is consistent to the intend to study the overall situation in country level.
+
+2. Why using the stepwise procedure in the model construction and model selection since it is an old method and there are more advanced methods?
+
+Answer: Stepwise procedure is to testify the result got from the subset selection, and even though it is an old and primitive methods, the accuracy of such methods is well guaranteed while doing selection on the linear regression model. And most importantly this method is easily to access and being used for many years which proved its reliability.
+
+3. Why does the some of the regression coefficients are too small compare to others?
+
+Answer: The regression coefficients of the variable “GDS” (gross domestic savings) and the “popdensity” (population density) are quite small compare to others, and the reason is because the observation value for those variables is quite big compare to other variables, such as for the GDS, the average value of the GDS is about 160 billion which is way bigger than other variables?
+
+4. Why using linear regression model and what are those criterion methods means and how do you select model based on it.
+
+Answer: The reasons to using the linear regression model is that this model is quite reliable when representing the relationship between few observation variables, since we only have 10 variables to look at and the even the full linear regression model will not have a large model variance, another reason is linear regression model is easy to construct and convenient to analyze. 
+
+
+5. How these factors were chosen for this report?
+
+Answer: All of these factors or variables were chosen from the outcome of a brainstorm. We chose those variables that logically possible to be significant with sufficient data from the Internet. Some factors from the brainstorm were very interesting, such as the access to running water; but we could not find data from sufficient number of countries, and this variable was not included in our report. 
